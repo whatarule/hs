@@ -38,6 +38,13 @@
     side L = "left"
     side R = "right"
 
+    randomSide :: StdGen -> ( Side, StdGen )
+    randomSide gen =
+        let ( n, newGen ) = random gen :: ( Int, StdGen )
+        in case n `mod` 2 of
+            0 -> ( R, newGen )
+            1 -> ( L, newGen )
+
     main :: IO ( )
     main = do
 
@@ -55,6 +62,9 @@
         print $ ( 0, 0 ) -: land L 1
         print $ ( 0, 0 ) -: land L 1 -: land R 2
         putStrLn ""
+        print $ ( 0, 0 ) -: land L 1 -: flyaway L 1
+        print $ ( 0, 0 ) -: land L 1 -: land R 2 -: flyaway L 1 -: flyaway R 1
+        putStrLn ""
 
     -- // PoleEi
         putStrLn "// PoleEi"
@@ -64,6 +74,11 @@
         print $ return ( 0, 0 ) >>= landEi L 1 >>= landEi R 3
         print $ return ( 0, 0 ) >>= landEi L 1 >>= landEi R 5
         print $ return ( 0, 0 ) >>= landEi L 1 >>= bananaEi
+        putStrLn ""
+        print $ return ( 0, 0 ) >>= landEi L 1 >>= flyawayEi L 1
+        print $ return ( 0, 0 ) >>= landEi L 1 >>= landEi R 3 >>= flyawayEi L 1 >>= flyawayEi R 2
+        print $ return ( 0, 0 ) >>= landEi L 1 >>= flyawayEi L 2
+        print $ return ( 0, 0 ) >>= landEi L 1 >>= landEi R 3 >>= flyawayEi L 1 >>= flyawayEi R 5
         putStrLn ""
 
     -- // PoleSt
@@ -134,35 +149,6 @@
             bananaExcT
         putStrLn ""
 
-    -- // PoleEffIO
-        putStrLn "// PoleEffIO"
-        runLift $ runPoleEffExc $ execState ( ( 0, 0 ) :: Pole ) $ do
-            landEffIO L 1
-        runLift $ execState ( ( 0, 0 ) :: Pole ) $ runPoleEffExc $ do
-            landEffIO L 1
-        putStrLn ""
-        runPoleEffIO $ do
-            landEffIO L 1
-        runPoleEffIO $ do
-            landEffIO L 1
-            landEffIO L 2
-        putStrLn ""
-        runPoleEffIO $ do
-            landEffIO L 1
-            landEffIO L 3
-        putStrLn ""
-        runPoleEffIO $ do
-            landEffIO L 3
-            landEffIO L 1
-        putStrLn ""
-        runPoleEffIO $ do
-            landEffIO L 1
-            landEffIO R 3
-        putStrLn ""
-        runPoleEffIO $ do
-            landEffIO R 5
-        putStrLn ""
-
     -- // PoleEff
         putStrLn "// PoleEff"
         printPoleEff $ do
@@ -197,10 +183,65 @@
             landEff L 1
             landEff R 3
             bananaEff
+        putStrLn ""
+        printPoleEff $ do
+            getOnTheLoap
+            landEff L 1
+            flyawayEff L 1
+        printPoleEff $ do
+            getOnTheLoap
+            landEff L 1
+            landEff R 3
+            flyawayEff L 1
+            flyawayEff R 2
+        printPoleEff $ do
+            getOnTheLoap
+            landEff L 1
+            flyawayEff L 2
+        printPoleEff $ do
+            getOnTheLoap
+            landEff L 1
+            landEff R 3
+            flyawayEff L 1
+            flyawayEff R 5
         
+    -- // PoleEffIO
+        putStrLn "// PoleEffIO"
+        runLift $ runPoleEffExc $ execState ( ( 0, 0 ) :: Pole ) $ do
+            landEffIO L 1
+        runLift $ execState ( ( 0, 0 ) :: Pole ) $ runPoleEffExc $ do
+            landEffIO L 1
+        putStrLn ""
+        runPoleEffIO $ do
+            landEffIO L 1
+        runPoleEffIO $ do
+            landEffIO L 1
+            landEffIO L 2
+        putStrLn ""
+        runPoleEffIO $ do
+            landEffIO L 1
+            landEffIO L 3
+        putStrLn ""
+        runPoleEffIO $ do
+            landEffIO L 3
+            landEffIO L 1
+        putStrLn ""
+        runPoleEffIO $ do
+            landEffIO L 1
+            landEffIO R 3
+        putStrLn ""
+        runPoleEffIO $ do
+            landEffIO R 5
+        putStrLn ""
+
     -- // pierreIO
         putStrLn "// pierreIO"
-        pierreIO pierre00
+    --  pierreIO pierre00
+        putStrLn ""
+
+    -- // pierreEff
+        putStrLn "// pierreEff"
+        runPierreEff pierreEff
         putStrLn ""
 
     -- // 
@@ -208,6 +249,114 @@
         putStrLn ""
 
 -- // 
+
+-- // pierreEff
+    type PierreEff r = (
+            Member ( State Pierre ) r
+        ,   SetMember Lift ( Lift IO ) r
+        ) => Eff r ( ) 
+
+    runPierreEff ::
+        Eff ( State Pierre :> Lift IO :> Void ) a
+        -> IO a
+    runPierreEff eff = runLift $ evalState pierre00 $ eff
+
+    pierreEff :: PierreEff r
+    pierreEff = do
+        cmd <- lift $ getLine
+        case cmd of
+            "step" -> stepEff
+            "hop" -> hopEff
+        --  "banana" -> bananaEff
+
+    stepEff :: PierreEff r
+    stepEff = do
+        pierre <- get
+        case pierre of
+            _ | banana pierre -> lift $ bananaIO pierre 
+            _ -> do
+                gen0 <- lift $ newStdGen
+                let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+                case n of
+                    _ | n < 70 -> lift $ landIO pierre
+                    _ -> lift $ bananaIO pierre
+
+    hopEff :: PierreEff r
+    hopEff = do
+        pierre <- get
+        case pierre of 
+            _ | banana pierre -> do
+                let eff = do
+                        tell ( [ "Hopping over a yellow-yellow-banana skin, yeah!" ] :: Story )
+                        return ( 0, 0 ) :: PoleEff r
+                putPoleEff eff
+                put $ pierre { banana = False }
+                pierreContEff 
+            _ -> pierreContEff
+        
+    landEffPr :: PierreEff r
+    landEffPr = do
+        gen0 <- lift $ newStdGen
+        let ( sd, gen1 ) = randomSide gen0 :: ( Side, StdGen )
+            ( n, gen2 ) = randomR ( 1, 3 ) gen1 :: ( Int, StdGen )
+            eff = landEff sd n
+        putPoleEff eff
+        pierreContEff
+
+    flyawayEffPr :: PierreEff r
+    flyawayEffPr = do
+        gen0 <- lift $ newStdGen
+        let ( sd, gen1 ) = randomSide gen0 :: ( Side, StdGen )
+            ( n, gen2 ) = randomR ( 1, 2 ) gen1 :: ( Int, StdGen )
+            eff = flyawayEff sd n
+        putPoleEff eff
+        pierreContEff
+
+    bananaEffPr :: PierreEff r 
+    bananaEffPr = do
+        pierre <- get
+        case pierre of
+            _ | banana pierre -> do
+                gen0 <- lift $ newStdGen
+                let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+                case n of
+                    _ | n < 70 -> do
+                        let eff = bananaEff
+                        putPoleEff eff
+                        pierreContEff
+                    _ -> do
+                        let eff = do
+                                tell [ "Stepping through a banana skin, yes!" ]
+                                return ( 0, 0 ) :: PoleEff r
+                        put $ pierre { banana = False }
+                        putPoleEff eff
+                        pierreContEff
+            _ -> do 
+                let eff = do
+                        tell [ "Something yellow on the loap.." ]
+                        return ( 0, 0 ) :: PoleEff r
+                put $ pierre { banana = True }
+                putPoleEff eff
+                pierreContEff
+
+    putPoleEff ::
+        Eff ( State Pole :> Exc Pole :> Writer Log :> Writer Story :> State Banana :> Void ) a
+        -> PierreEff r
+    putPoleEff eff = do
+        pierre <- get
+        let pierreNew = ( `orderedWr` pierre ) $ runPoleEff pierre eff
+        put $ pierreNew
+    --  lift $ printPierreStory pierreNew
+        lift $ printPierreStoryN pierreNew pierre
+        lift $ putStrLn ""
+
+    pierreContEff :: PierreEff r
+    pierreContEff = do
+        pierre <- get
+        case pole pierre of
+            Right _ -> pierreEff
+            _ -> lift $ groundIO pierre
+
 
 -- // pierreIO
     type PierreIO r a = (
@@ -229,7 +378,6 @@
         modify ( ++ [ bananaEff ])
         cmd <- lift $ getLine
         lift $ print cmd
-
 -}
 
     pierreIO :: Pierre -> IO ( ) 
@@ -262,11 +410,6 @@
             let eff = return ( 0, 0 ) :: PoleEff r
             pierreContIO pierre eff
         
-    flyaway :: Side -> Birds -> Pole -> Pole
-    flyaway sd n ( left, right ) = case sd of
-        L -> ( left - n, right )
-        R -> ( left, right - n )
-
     landIO :: Pierre -> IO ( )
     landIO pierre = do
         gen0 <- newStdGen
@@ -275,12 +418,13 @@
             eff = landEff sd n
         pierreContIO pierre eff
 
-    randomSide :: StdGen -> ( Side, StdGen )
-    randomSide gen =
-        let ( n, newGen ) = random gen :: ( Int, StdGen )
-        in case n `mod` 2 of
-            0 -> ( R, newGen )
-            1 -> ( L, newGen )
+    flyawayIO :: Pierre -> IO ( )
+    flyawayIO pierre = do
+        gen0 <- newStdGen
+        let ( sd, gen1 ) = randomSide gen0 :: ( Side, StdGen )
+            ( n, gen2 ) = randomR ( 1, 2 ) gen1 :: ( Int, StdGen )
+            eff = flyawayEff sd n
+        pierreContIO pierre eff
 
     bananaIO :: Pierre -> IO ( )
     bananaIO pierre = case pierre of
@@ -350,6 +494,33 @@
             lenO = length $ wOld
             wNew = take ( length w - lenO ) w
         in pierre { story = wOld ++ wNew }
+
+-- // PoleEffIO
+    type PoleEffIO r = (
+        Member ( State Pole ) r,
+        Member ( Exc Pole ) r,
+        SetMember Lift ( Lift IO ) r
+        ) => Eff r ( )
+
+    runPoleEffIO ::
+        Eff ( State Pole :> Exc Pole :> Lift IO :> Void ) ( )
+        -> IO ( Either Pole Pole )
+    runPoleEffIO p = runLift $ runPoleEffExc $ execPoleEffSt p
+        where
+            runPoleEffExc m = runExc m
+            execPoleEffSt m = execState p0 m
+            p0 = ( 0, 0 ) :: Pole
+
+    landEffIO :: Side -> Birds -> PoleEffIO r 
+    landEffIO sd n = do
+        modify ( land sd n )
+        r <- get
+        let ( left, right ) = r :: Pole 
+            ab = abs $ left - right
+        case ab of
+            _ | ab < 4 -> return ( ) 
+            _ -> throwExc r
+        lift $ print r
 
 -- // PoleEff
     type PoleEff r = (
@@ -490,6 +661,18 @@
         tell ( [ br ++ "landing on the " ++ side sd ++ " side of the pole..." ] :: Story )
         checkBalanceEff
 
+    flyawayEff :: Side -> Birds -> PoleEff r
+    flyawayEff sd n = do
+        p <- get
+        case flyawayEi sd n p of
+            Right _ -> do
+                modify ( flyaway sd n )
+                let br | n == 1 = "A bird is "
+                       | otherwise = show n  ++ " birds are "
+                tell ( [ br ++ "flying away from the " ++ side sd  ++ " side of the pole..." ] :: Story )
+                checkBalanceEff
+            Left _ -> flyawayEff sd ( n - 1 )
+
     checkBalanceEff :: PoleEff r
     checkBalanceEff = do
         r <- get
@@ -541,6 +724,11 @@
         L -> ( left + n, right )
         R -> ( left, right + n )
 
+    flyaway :: Side -> Birds -> Pole -> Pole
+    flyaway sd n ( left, right ) = case sd of
+        L -> ( left - n, right )
+        R -> ( left, right - n )
+
 -- // PoleEi
     type PoleEi = Either Pole Pole
     
@@ -551,7 +739,18 @@
             ab = abs $ left - right
         case ab of
             _ | ab < 4 -> Right r
-            _ -> Left $ landLeft n p
+            _ -> Left r
+
+    flyawayEi :: Side -> Birds -> Pole -> PoleEi
+    flyawayEi sd n p = do
+        let r = flyaway sd n p
+            ( left, right ) = r
+            sum = left + right
+            prd = left * right
+        case r of
+            _ | sum >= 0 && prd >= 0 -> Right r
+            _ -> Left r
+        --  _ -> flyawayEi sd ( n - 1 ) p
 
     bananaEi :: Pole -> PoleEi
     bananaEi p = Left p
@@ -629,33 +828,6 @@
     bananaExcT = do
         r <- S.get
         E.throwError r
-
--- // landEffIO
-    type PoleEffIO r = (
-        Member ( State Pole ) r,
-        Member ( Exc Pole ) r,
-        SetMember Lift ( Lift IO ) r
-        ) => Eff r ( )
-
-    runPoleEffIO ::
-        Eff ( State Pole :> Exc Pole :> Lift IO :> Void ) ( )
-        -> IO ( Either Pole Pole )
-    runPoleEffIO p = runLift $ runPoleEffExc $ execPoleEffSt p
-        where
-            runPoleEffExc m = runExc m
-            execPoleEffSt m = execState p0 m
-            p0 = ( 0, 0 ) :: Pole
-
-    landEffIO :: Side -> Birds -> PoleEffIO r 
-    landEffIO sd n = do
-        modify ( land sd n )
-        r <- get
-        let ( left, right ) = r :: Pole 
-            ab = abs $ left - right
-        case ab of
-            _ | ab < 4 -> return ( ) 
-            _ -> throwExc r
-        lift $ print r
 
 
 
