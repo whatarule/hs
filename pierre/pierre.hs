@@ -153,58 +153,58 @@
         putStrLn "// PoleEff"
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
+            landEffCh L 1
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff L 1
+            landEffCh L 1
+            landEffCh L 1
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff L 1
-            landEff L 2
+            landEffCh L 1
+            landEffCh L 1
+            landEffCh L 2
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff L 1
-            landEff L 2
-            landEff L 2
+            landEffCh L 1
+            landEffCh L 1
+            landEffCh L 2
+            landEffCh L 2
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff R 3
+            landEffCh L 1
+            landEffCh R 3
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff R 3
-            landEff R 3
+            landEffCh L 1
+            landEffCh R 3
+            landEffCh R 3
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff R 3
+            landEffCh L 1
+            landEffCh R 3
             bananaEff
         putStrLn ""
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            flyawayEff L 1
+            landEffCh L 1
+            flyawayEffCh L 1
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff R 3
-            flyawayEff L 1
-            flyawayEff R 2
+            landEffCh L 1
+            landEffCh R 3
+            flyawayEffCh L 1
+            flyawayEffCh R 2
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            flyawayEff L 2
+            landEffCh L 1
+            flyawayEffCh L 2
         printPoleEff $ do
             getOnTheRoap
-            landEff L 1
-            landEff R 3
-            flyawayEff L 1
-            flyawayEff R 5
-        
+            landEffCh L 1
+            landEffCh R 3
+            flyawayEffCh L 1
+            flyawayEffCh R 5
+
     -- // PoleEffIO
         putStrLn "// PoleEffIO"
         runLift $ runPoleEffExc $ execState ( ( 0, 0 ) :: Pole ) $ do
@@ -273,6 +273,7 @@
                 lift $ putStrLn "---"
                 lift $ putStrLn ""
                 putPoleEff $ getOnTheRoap
+                lift $ putStrLn ""
                 pierreEff
 
     introEff :: PierreEff r
@@ -297,8 +298,7 @@
         gen0 <- lift $ newStdGen
         let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
         case n of
-            _ | n < 10 -> do
-                lostStepEff
+            _ | n < 10 -> lostStepEff
             _ -> do
                 case pierre of
                     _ | banana pierre -> bananaEffPr
@@ -306,22 +306,30 @@
                         gen0 <- lift $ newStdGen
                         let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
                         case n of
-                            _ | n < 70 -> landEffPr
+                            _ | n < 70 -> do
+                                landEffPr
+                                checkBalanceEffPr
+                                pierreContEff
                             _ -> bananaEffPr
-                pierreContEff 
 
     hopEff :: PierreEff r
     hopEff = do
         pierre <- get
         putPoleEff $ tell [ "Made a hop!" ]
-        case pierre of 
-            _ | banana pierre -> do
-                putPoleEff $ do
-                    tell ( [ "Hopping over a yellow-yellow-banana skin, yeah!" ] :: Story )
-                put $ pierre { banana = False }
-            _ -> return ( ) 
-        flyawayEffPr
-        pierreContEff
+        gen0 <- lift $ newStdGen
+        let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+        case n of
+            _ | n < 20 -> lostStepEff 
+            _  -> do
+                case pierre of 
+                    _ | banana pierre -> do
+                        putPoleEff $ do
+                            tell ( [ "Hopping over a yellow-yellow-banana skin, yeah!" ] :: Story )
+                        put $ pierre { banana = False }
+                    _ -> return ( ) 
+                flyawayEffPr
+                checkBalanceEffPr
+                pierreContEff
     
     jumpEff :: PierreEff r
     jumpEff = do
@@ -329,32 +337,73 @@
         gen0 <- lift $ newStdGen
         let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
         case n of
-            _ | n < 70 -> do
-                putPoleEff $ do
-                    tell [ "Pierre made a perfect landing on the ground." ]
-            _ -> do
-                putPoleEff $ do
-                    tell [ "Pierre made a landing on his knee." ]
-                flyawayEffPr
-                flyawayEffPr
+            _ | n < 70 -> pfLandEffPr
+            _ -> knLandEffPr
         groundEff
 
     lostStepEff :: PierreEff r
     lostStepEff = do
         putPoleEff $ do
             tell [ "Lost his step from the roap!" ]
-            tell [ "Pierre made a landing on his knee." ]
-        flyawayEffPr
-        flyawayEffPr
-        flyawayEffPr
-        groundEff
+        hpLandEffPr
 
+    pfLandEffPr :: PierreEff r
+    pfLandEffPr = do
+        putPoleEff $ pfLandEff
+        lift $ putStrLn ""
+        lift $ putStrLn "Press enter..." 
+        lift $ getLine
+        groundEff
+        
+    knLandEffPr :: PierreEff r
+    knLandEffPr = do
+        putPoleEff $ knLandEff
+        lift $ putStrLn ""
+        lift $ putStrLn "Press enter..." 
+        lift $ getLine
+        flyawayEffPr
+        flyawayEffPr
+        lift $ putStrLn ""
+        groundEff
+        
+    hpLandEffPr :: PierreEff r
+    hpLandEffPr = do
+        putPoleEff $ hpLandEff
+        lift $ putStrLn ""
+        lift $ putStrLn "Press enter..." 
+        lift $ getLine
+        flyawayEffPr
+        flyawayEffPr
+        flyawayEffPr
+        lift $ putStrLn ""
+        groundEff
+        
     landEffPr :: PierreEff r
     landEffPr = do
         gen0 <- lift $ newStdGen
         let ( sd, gen1 ) = randomSide gen0 :: ( Side, StdGen )
             ( n, gen2 ) = randomR ( 1, 3 ) gen1 :: ( Int, StdGen )
         putPoleEff $ landEff sd n 
+
+    checkBalanceEffPr :: PierreEff r
+    checkBalanceEffPr = do
+        pierre <- get
+        let Right r = pole pierre
+            ( left, right ) = r :: Pole
+            ab = abs $ left - right
+        case ab of
+            _ | ab < 4 -> do
+                putPoleEff $ do
+                    tell ( [ "Balanced in " ++ show r ++ "..."] :: Story )
+            _ -> do
+                putPoleEff $ do
+                    tell ( [ "Unbalanced in " ++ show r ++ "!"] :: Story )
+                gen0 <- lift $ newStdGen
+                let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+                case n of
+                    _ | n < 10 -> pfLandEffPr
+                    _ | n < 70 -> knLandEffPr
+                    _ -> hpLandEffPr
 
     flyawayEffPr :: PierreEff r
     flyawayEffPr = do
@@ -372,16 +421,19 @@
                 let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
                 case n of
                     _ | n < 70 -> do
-                        putPoleEff $ bananaEff
+                        putPoleEff $ do
+                            tell ( [ "Slipped on a banana skin!" ] :: Story )
+                        hpLandEffPr    
                     _ -> do
                         putPoleEff $ do
                             tell [ "Stepping through a banana skin, yes!" ]
                         put $ pierre { banana = False }
             _ -> do 
                 put $ pierre { banana = True }
+                checkBalanceEffPr
                 putPoleEff $ do
-                    checkBalanceEff
                     tell [ "Something yellow on the roap.." ]
+                pierreContEff
 
     putPoleEff ::
         Eff ( State Pole :> Exc Pole :> Writer Log :> Writer Story :> State Banana :> Void ) a
@@ -392,19 +444,21 @@
         put $ pierreNew
     --  lift $ printPierreStory pierreNew
         lift $ printPierreStoryN pierreNew pierre
-        lift $ putStrLn ""
+    --  lift $ putStrLn ""
 
     pierreContEff :: PierreEff r
     pierreContEff = do
+        lift $ putStrLn ""
         pierre <- get
         case pole pierre of
             Right _ -> pierreEff
-            _ -> groundEff
+            Left _ -> groundEff
 
     groundEff :: PierreEff r
     groundEff = do
         pierre <- get
         lift $ groundIO pierre 
+        lift $ putStrLn ""
     
 
 -- // pierreIO
@@ -663,7 +717,8 @@
 
     execPoleEffStP :: Pierre -> Eff ( State Pole :> r ) a -> Eff r Pole
     execPoleEffStP pierre m = execState p m
-        where Right p = pole pierre :: Either Pole Pole
+        where p = case pole pierre of Right pR -> pR :: Pole
+                                      Left pL -> pL :: Pole
 
     runPoleEffExc :: Eff ( Exc Pole :> r ) a -> Eff r ( Either Pole a ) 
     runPoleEffExc m = runExc m
@@ -708,6 +763,17 @@
         checkBalanceEff
         return ( r :: Pole )
 
+
+    landEffCh :: Side -> Birds -> PoleEff r
+    landEffCh sd n = do
+        landEff sd n
+        checkBalanceEff
+
+    flyawayEffCh :: Side -> Birds -> PoleEff r
+    flyawayEffCh sd n = do
+        flyawayEff sd n
+        checkBalanceEff
+
     landEff :: Side -> Birds -> PoleEff r
     landEff sd n = do
         modify ( land sd n )
@@ -719,9 +785,14 @@
             _ -> return $ show n ++ " birds are "
     -}
         tell ( [ br ++ "landing on the " ++ side sd ++ " side of the pole..." ] :: Story )
-        checkBalanceEff
+        r <- get
+        tell ( [ r ] :: Log ) 
+        return r
 
     flyawayEff :: Side -> Birds -> PoleEff r
+    flyawayEff sd 0 = do
+        p <- get
+        return p        
     flyawayEff sd n = do
         p <- get
         case flyawayEi sd n p of
@@ -730,15 +801,14 @@
                 let br | n == 1 = "A bird is "
                        | otherwise = show n  ++ " birds are "
                 tell ( [ br ++ "flying away from the " ++ side sd  ++ " side of the pole..." ] :: Story )
-                return p 
-            Left _ -> case n of
-                _ | n == 0 -> return p
-                _ -> flyawayEff sd ( n - 1 )
+                r <- get
+                tell ( [ r ] :: Log ) 
+                return r
+            Left _ -> flyawayEff sd ( n - 1 )
 
     checkBalanceEff :: PoleEff r
     checkBalanceEff = do
         r <- get
-        tell ( [ r ] :: Log ) 
         let ( left, right ) = r :: Pole 
             ab = abs $ left - right
         case ab of
@@ -747,15 +817,31 @@
                 return r
             _ -> do
                 tell ( [ "Unbalanced in " ++ show r ++ "!"] :: Story )
-                tell ( [ "Pierre made a perfect landing on the ground." ] :: Story )
-                throwExc r
+                pfLandEff
 
     bananaEff :: PoleEff r
     bananaEff = do
-        r <- get
         tell ( [ "Slipped on a banana skin!" ] :: Story )
-        tell ( [ "Pierre made a hip-landing on the muddy ground!!" ] :: Story )
+        hpLandEff
+
+    pfLandEff :: PoleEff r
+    pfLandEff = do
+        tell ( [ "Pierre made a perfect landing on the ground." ] :: Story )
+        r <- get
         throwExc ( r :: Pole )
+        
+    knLandEff :: PoleEff r
+    knLandEff = do
+        tell ( [ "Pierre made a landing on his knee." ] :: Story )
+        r <- get
+        throwExc ( r :: Pole )
+        
+    hpLandEff :: PoleEff r
+    hpLandEff = do
+        tell ( [ "Pierre made a hip-landing on the muddy ground!!" ] :: Story )
+        r <- get
+        throwExc ( r :: Pole )
+        
 {-
     tellBalanced :: PoleEff r
     tellBalanced = do
