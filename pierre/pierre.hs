@@ -296,7 +296,7 @@
         pierre <- get
         putPoleEff $ tell [ "Taking a step..." ]
         gen0 <- lift $ newStdGen
-        let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+        let ( n, _ ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
         case n of
             _ | n < 10 -> lostStepEff
             _ -> do
@@ -309,7 +309,6 @@
                             _ | n < 70 -> do
                                 landEffPr
                                 checkBalanceEffPr
-                                pierreContEff
                             _ -> bananaEffPr
 
     hopEff :: PierreEff r
@@ -317,7 +316,7 @@
         pierre <- get
         putPoleEff $ tell [ "Made a hop!" ]
         gen0 <- lift $ newStdGen
-        let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+        let ( n, _ ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
         case n of
             _ | n < 20 -> lostStepEff 
             _  -> do
@@ -329,13 +328,12 @@
                     _ -> return ( ) 
                 flyawayEffPr
                 checkBalanceEffPr
-                pierreContEff
     
     jumpEff :: PierreEff r
     jumpEff = do
         putPoleEff $ tell [ "Jumping from the roap!" ]
         gen0 <- lift $ newStdGen
-        let ( n, gen1 ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
+        let ( n, _ ) = randomR ( 0, 99 ) gen0 :: ( Int, StdGen )
         case n of
             _ | n < 70 -> pfLandEffPr
             _ -> knLandEffPr
@@ -344,7 +342,7 @@
     lostStepEff :: PierreEff r
     lostStepEff = do
         putPoleEff $ do
-            tell [ "Lost his step from the roap!" ]
+            tell [ "Lost his step on the roap!" ]
         hpLandEffPr
 
     pfLandEffPr :: PierreEff r
@@ -363,6 +361,9 @@
         lift $ getLine
         flyawayEffPr
         flyawayEffPr
+        putPoleEff $ do
+            r <- get
+            throwExc ( r :: Pole )
         lift $ putStrLn ""
         groundEff
         
@@ -372,9 +373,10 @@
         lift $ putStrLn ""
         lift $ putStrLn "Press enter..." 
         lift $ getLine
-        flyawayEffPr
-        flyawayEffPr
-        flyawayEffPr
+        flyawayEffPrAll
+        putPoleEff $ do
+            r <- get
+            throwExc ( r :: Pole )
         lift $ putStrLn ""
         groundEff
         
@@ -395,6 +397,7 @@
             _ | ab < 4 -> do
                 putPoleEff $ do
                     tell ( [ "Balanced in " ++ show r ++ "..."] :: Story )
+                pierreContEff
             _ -> do
                 putPoleEff $ do
                     tell ( [ "Unbalanced in " ++ show r ++ "!"] :: Story )
@@ -412,6 +415,13 @@
             ( n, gen2 ) = randomR ( 1, 2 ) gen1 :: ( Int, StdGen )
         putPoleEff $ flyawayEff sd n
 
+    flyawayEffPrAll :: PierreEff r
+    flyawayEffPrAll = do
+        pierre <- get
+        let Left ( left, right ) = pole pierre
+        putPoleEff $ flyawayEff L left
+        putPoleEff $ flyawayEff R right
+
     bananaEffPr :: PierreEff r 
     bananaEffPr = do
         pierre <- get
@@ -428,9 +438,9 @@
                         putPoleEff $ do
                             tell [ "Stepping through a banana skin, yes!" ]
                         put $ pierre { banana = False }
+                        pierreContEff
             _ -> do 
                 put $ pierre { banana = True }
-                checkBalanceEffPr
                 putPoleEff $ do
                     tell [ "Something yellow on the roap.." ]
                 pierreContEff
@@ -493,6 +503,10 @@
 
     introIO :: IO ( )
     introIO = do
+        putStrLn ""
+        putStrLn "Pierre has decided to take a break from his job at the fish farm and try tightrope walking..."
+        putStrLn "( Miran Lipovaca \"Learn You a Haskell for Great Good\" "
+        putStrLn "  12.A Fistful of Monads \"Walk the line\" )"
         putStrLn ""
         putStrLn "* Pierre can \"step\", \"hop\", and \"jump\"."
         putStrLn ""
@@ -792,6 +806,7 @@
     flyawayEff :: Side -> Birds -> PoleEff r
     flyawayEff sd 0 = do
         p <- get
+        tell ( [ "No birds on the " ++ side sd ++ " of the pole..." ] :: Story )
         return p        
     flyawayEff sd n = do
         p <- get
@@ -896,7 +911,7 @@
             sum = left + right
             prd = left * right
         case r of
-            _ | sum > 0 && prd >= 0 -> Right r
+            _ | sum >= 0 && prd >= 0 -> Right r
             _ -> Left r
         --  _ -> flyawayEi sd ( n - 1 ) p
 
