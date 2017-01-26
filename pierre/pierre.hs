@@ -1,14 +1,3 @@
---  test
-<<<<<<< HEAD
-<<<<<<< HEAD
---  test
---  test
-=======
->>>>>>> parent of 9f15f2c... test02
-=======
---  test
---  test
->>>>>>> parent of a52acd0... test
 
     {-# LANGUAGE FlexibleContexts #-}
     {-# LANGUAGE TypeOperators #-}
