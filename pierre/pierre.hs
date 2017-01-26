@@ -1,6 +1,9 @@
 --  test
+<<<<<<< HEAD
 --  test
 --  test
+=======
+>>>>>>> parent of 9f15f2c... test02
 
     {-# LANGUAGE FlexibleContexts #-}
     {-# LANGUAGE TypeOperators #-}
