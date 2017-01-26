@@ -806,7 +806,7 @@
     flyawayEff :: Side -> Birds -> PoleEff r
     flyawayEff sd 0 = do
         p <- get
-        tell ( [ "No birds on the " ++ side sd ++ " of the pole..." ] :: Story )
+        tell ( [ "No birds on the " ++ side sd ++ " side of the pole..." ] :: Story )
         return p        
     flyawayEff sd n = do
         p <- get
