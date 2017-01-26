@@ -1,4 +1,3 @@
---  test
 
     {-# LANGUAGE FlexibleContexts #-}
     {-# LANGUAGE TypeOperators #-}
