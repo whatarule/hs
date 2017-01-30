@@ -98,13 +98,13 @@
 
     introEff :: PierreEff r
     introEff = lift $ do
-            putStrLn ""
-            putStrLn "Pierre has decided to take a break from his job at the fish farm and try tightrope walking..."
-            putStrLn "( Miran Lipovaca \"Learn You a Haskell for Great Good\" "
-            putStrLn "  12.A Fistful of Monads \"Walk the line\" )"
-            putStrLn ""
-            putStrLn "* Pierre can \"step\", \"hop\", and \"jump\"."
-            putStrLn ""
+        putStrLn ""
+        putStrLn "Pierre has decided to take a break from his job at the fish farm and try tightrope walking..."
+        putStrLn "( Miran Lipovaca \"Learn You a Haskell for Great Good\" "
+        putStrLn "  12.A Fistful of Monads \"Walk the line\" )"
+        putStrLn ""
+        putStrLn "* Pierre can \"step\", \"hop\", and \"jump\"."
+        putStrLn ""
 
     pierreEff :: PierreEff r
     pierreEff = do
