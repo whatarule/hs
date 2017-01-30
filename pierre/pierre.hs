@@ -54,12 +54,6 @@
     side L = "left"
     side R = "right"
 
-    randomSide :: StdGen -> ( Side, StdGen )
-    randomSide gen =
-        let ( n, newGen ) = random gen :: ( Int, StdGen )
-        in case n `mod` 2 of
-            0 -> ( R, newGen )
-            1 -> ( L, newGen )
 
 
 -- // main
@@ -72,6 +66,7 @@
         putStrLn "// Pierre"
         runPierreEff getOnTheRoapEff
         putStrLn ""
+
 
 
 -- // pierreEff
@@ -93,17 +88,16 @@
         case cmd of
             "quit" -> return ( )
             _ -> do
-                lift $ putStrLn ""
-                lift $ putStrLn "---"
-                lift $ putStrLn ""
+                lift $ do
+                    putStrLn ""
+                    putStrLn "---"
+                    putStrLn ""
                 putPoleEff $ getOnTheRoap
                 lift $ putStrLn ""
                 pierreEff
 
     introEff :: PierreEff r
-    introEff = do
-    --  lift $ introIO
-        lift $ do
+    introEff = lift $ do
             putStrLn ""
             putStrLn "Pierre has decided to take a break from his job at the fish farm and try tightrope walking..."
             putStrLn "( Miran Lipovaca \"Learn You a Haskell for Great Good\" "
@@ -111,17 +105,6 @@
             putStrLn ""
             putStrLn "* Pierre can \"step\", \"hop\", and \"jump\"."
             putStrLn ""
-
-
-    introIO :: IO ( )
-    introIO = do
-        putStrLn ""
-        putStrLn "Pierre has decided to take a break from his job at the fish farm and try tightrope walking..."
-        putStrLn "( Miran Lipovaca \"Learn You a Haskell for Great Good\" "
-        putStrLn "  12.A Fistful of Monads \"Walk the line\" )"
-        putStrLn ""
-        putStrLn "* Pierre can \"step\", \"hop\", and \"jump\"."
-        putStrLn ""
 
     pierreEff :: PierreEff r
     pierreEff = do
@@ -191,17 +174,19 @@
     pfLandEffPr :: PierreEff r
     pfLandEffPr = do
         putPoleEff $ pfLandEff
-        lift $ putStrLn ""
-        lift $ putStrLn "Press enter..." 
-        lift $ getLine
+        lift $ do
+            putStrLn ""
+            putStrLn "Press enter..." 
+            getLine
         groundEff
         
     knLandEffPr :: PierreEff r
     knLandEffPr = do
         putPoleEff $ knLandEff
-        lift $ putStrLn ""
-        lift $ putStrLn "Press enter..." 
-        lift $ getLine
+        lift $ do
+            putStrLn ""
+            putStrLn "Press enter..." 
+            getLine
         flyawayEffPr
         flyawayEffPr
         putPoleEff $ do
@@ -213,22 +198,31 @@
     hpLandEffPr :: PierreEff r
     hpLandEffPr = do
         putPoleEff $ hpLandEff
-        lift $ putStrLn ""
-        lift $ putStrLn "Press enter..." 
-        lift $ getLine
+        lift $ do
+            putStrLn ""
+            putStrLn "Press enter..." 
+            getLine
         flyawayEffPrAll
         putPoleEff $ do
             r <- get
             throwExc ( r :: Pole )
         lift $ putStrLn ""
         groundEff
-        
+
+
     landEffPr :: PierreEff r
     landEffPr = do
         gen0 <- lift $ newStdGen
         let ( sd, gen1 ) = randomSide gen0 :: ( Side, StdGen )
             ( n, gen2 ) = randomR ( 1, 3 ) gen1 :: ( Int, StdGen )
         putPoleEff $ landEff sd n 
+
+    randomSide :: StdGen -> ( Side, StdGen )
+    randomSide gen =
+        let ( n, newGen ) = random gen :: ( Int, StdGen )
+        in case n `mod` 2 of
+            0 -> ( R, newGen )
+            1 -> ( L, newGen )
 
     checkBalanceEffPr :: PierreEff r
     checkBalanceEffPr = do
@@ -296,9 +290,7 @@
         pierre <- get
         let pierreNew = ( `orderedWr` pierre ) $ runPoleEff pierre eff
         put $ pierreNew
-    --  lift $ printPierreStory pierreNew
         lift $ printPierreStoryN pierreNew pierre
-    --  lift $ putStrLn ""
 
     orderedWr :: Pierre -> Pierre -> Pierre
     orderedWr pierre pierreOld =
@@ -333,24 +325,20 @@
     groundEff :: PierreEff r
     groundEff = do
         pierre <- get
-        lift $ groundIO pierre 
-        lift $ putStrLn ""
+        lift $ do
+            putStrLn "Press enter to show the log and result."
+            getLine
+            putStrLn "log & result :"
+            printPierreLog pierre
+            printPierrePole pierre
+            putStrLn ""
+            putStrLn "Press enter to show the Pierre's whole story."
+            getLine
+            putStrLn "whole story :"
+            printPierreStory pierre
+            putStrLn ""
+
     
-    groundIO :: Pierre -> IO ( )
-    groundIO pierre = do
-        putStrLn "Press enter to show the log and result."
-        getLine
-        putStrLn "log & result :"
-        printPierreLog pierre
-        printPierrePole pierre
-        putStrLn ""
-        putStrLn "Press enter to show the Pierre's whole story."
-        getLine
-        putStrLn "whole story :"
-        printPierreStory pierre
-        putStrLn ""
-
-
 -- // PoleEff
     printPoleEff ::
         Eff ( State Pole :> Exc Pole :> Writer Log :> Writer Story :> State Banana :> Void ) a -> IO ( )
