@@ -1,7 +1,6 @@
 
     {-# LANGUAGE FlexibleContexts #-}
     {-# LANGUAGE TypeOperators #-}
-    
     {-# LANGUAGE RankNTypes #-}
 
     import Control.Eff
