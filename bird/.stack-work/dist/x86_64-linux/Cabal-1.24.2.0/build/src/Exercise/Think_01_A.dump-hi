@@ -1,0 +1,59 @@
+
+==================== FINAL INTERFACE ====================
+2017-05-26 05:16:20.407985 UTC
+
+interface bird-0.1.0.0-5aVSAYxsaiXGbJuh5ktiFR:Exercise.Think_01_A 8002
+  interface hash: 4a3623f5bfdef716110b815989c885ba
+  ABI hash: bac80553070e99627aed5732d9889ed8
+  export-list hash: 85040aaccc7829c471b2da0d423cf615
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: 6941e8a3e48dba60ef78b14284373735
+  sig of: Nothing
+  used TH splices: False
+  where
+exports:
+  Exercise.Think_01_A.double
+module dependencies:
+package dependencies: base-4.9.1.0* ghc-prim-0.5.0.0
+                      integer-gmp-1.0.0.1
+orphans: base-4.9.1.0:GHC.Base base-4.9.1.0:GHC.Float
+family instance modules: base-4.9.1.0:Control.Applicative
+                         base-4.9.1.0:Data.Either base-4.9.1.0:Data.Functor.Const
+                         base-4.9.1.0:Data.Monoid base-4.9.1.0:Data.Type.Equality
+                         base-4.9.1.0:GHC.Generics base-4.9.1.0:GHC.IO.Exception
+                         base-4.9.1.0:GHC.TypeLits
+import  -/  base-4.9.1.0:GHC.Num 00bfaa7b2f9d6084913c0697a8a49ec8
+import  -/  base-4.9.1.0:Prelude 22dd289b8469a8fa8dc81cab7b237771
+import  -/  integer-gmp-1.0.0.1:GHC.Integer.Type 318df275d77dcdb18e0006d8d7870c2a
+b161b48215ae874f11e51fcac8c58b04
+  $trModule :: GHC.Types.Module
+  {- HasNoCafRefs, Strictness: m,
+     Unfolding: (GHC.Types.Module
+                   Exercise.Think_01_A.$trModule2
+                   Exercise.Think_01_A.$trModule1) -}
+fcb0c306f204a5cd1da5e44024a0681d
+  $trModule1 :: GHC.Types.TrName
+  {- HasNoCafRefs, Strictness: m1,
+     Unfolding: (GHC.Types.TrNameS "Exercise.Think_01_A"#) -}
+2e99fe2521dfc997221fbae6409b7620
+  $trModule2 :: GHC.Types.TrName
+  {- HasNoCafRefs, Strictness: m1,
+     Unfolding: (GHC.Types.TrNameS
+                   "bird-0.1.0.0-5aVSAYxsaiXGbJuh5ktiFR"#) -}
+7b62ad1fd6eb22a36aa40f2722bd9d6a
+  double :: GHC.Integer.Type.Integer -> GHC.Integer.Type.Integer
+  {- Arity: 1, Strictness: <S,U>,
+     Unfolding: InlineRule (1, True, False)
+                (\ (x :: GHC.Integer.Type.Integer) ->
+                 GHC.Integer.Type.timesInteger Exercise.Think_01_A.double1 x) -}
+b4892487b6cfa333c49db44753e85877
+  double1 :: GHC.Integer.Type.Integer
+  {- HasNoCafRefs, Unfolding: (2) -}
+vectorised variables:
+vectorised tycons:
+vectorised reused tycons:
+parallel variables:
+parallel tycons:
+trusted: safe
+require own pkg trusted: False
+
