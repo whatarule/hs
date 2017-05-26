@@ -1,0 +1,26 @@
+
+    import System.IO
+    import Data.Char
+
+
+    main = do
+
+        inh <- openFile "toUpper-imp/input.txt" ReadMode
+        outh <- openFile "toUpper-imp/output.txt" WriteMode
+        mainloop inh outh
+        hClose inh
+        hClose outh
+
+
+    mainloop :: Handle -> Handle -> IO ( )
+    mainloop inh outh = do
+        ineof <- hIsEOF inh
+        if ineof
+            then return ( )
+            else do
+                inpStr <- hGetLine inh
+                hPutStrLn outh $ map toUpper inpStr
+                mainloop inh outh
+
+  
+
