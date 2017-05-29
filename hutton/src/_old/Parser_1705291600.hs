@@ -31,30 +31,6 @@ return :: a -> Parser a
 return v = P $ \inp -> [(v,inp)]
 -- |
 
-failure :: Parser a
--- |
--- >>> parse failure "abc"
--- []
---
-failure = P $ \inp -> []
-
-item :: Parser Char
--- |
--- >>> parse item ""
--- []
--- >>> parse item "abc"
--- [('a',"bc")]
---
-item = P $ \inp -> case inp of
-  []     -> []
-  (x:xs) -> [(x, xs)]
--- |
-
-bool :: (a -> Bool) -> Parser a -> Parser a
-bool f p = P $ \inp -> case parse (f <$> p) inp of
-  [(True,_)] -> parse p inp
-  _          -> empty
-
 
 -- // instance
 
@@ -85,7 +61,7 @@ instance Applicative Parser where
 instance Monad Parser where
 --  (>>=) :: Parser a -> (a -> Parser b) -> Parser b
     p >>= f = P $ \inp -> case parse p inp of
-      []        -> []
+      [] -> []
       [(v,out)] -> parse (f v) out
 -- |
 -- >>> flip parse "" $ pure 0 >>= (\_ -> pure 1)
@@ -107,16 +83,59 @@ instance Alternative Parser where
 --
 
 
--- // Char
+
+failure :: Parser a
+-- |
+-- >>> parse failure "abc"
+-- []
+--
+failure = P $ \inp -> []
+
+item :: Parser Char
+-- |
+-- >>> parse item ""
+-- []
+-- >>> parse item "abc"
+-- [('a',"bc")]
+--
+item = P $ \inp -> case inp of
+  []     -> []
+  (x:xs) -> [(x, xs)]
+-- |
 
 sat :: (Char -> Bool) -> Parser Char
-sat p = P . parse $ bool p item
+sat p = P $ \inp -> case flip parse inp $ p <$> item of
+  [(True,_)] -> flip parse inp item
+  _          -> empty
+
+
+-- // String
+
+string :: String -> Parser String
+-- |
+-- >>> flip parse "aabbcc" $ string "aa"
+-- [("aa","bbcc")]
+-- >>> flip parse "aabbcc" $ string "bb"
+-- []
+-- >>> flip parse "aabbcc" $ string "aaa"
+-- []
+--
+string ""     = pure ""
+string (x:xs) = P $ \inp ->
+  case flip parse inp $ char x of
+    [(y,ys)] -> flip parse ys $ (y:) <$> string xs
+    _        -> empty
+-- |
+
+
+-- // Char
 
 char :: Char -> Parser Char
 -- |
 -- >>> flip parse "abc" $ char 'a'
 -- [('a',"bc")]
 char x = sat (== x)
+-- |
 
 digit :: Parser Char
 digit = sat isDigit
@@ -134,20 +153,6 @@ alphanum :: Parser Char
 alphanum = sat isAlphaNum
 
 
--- // String
-
-string :: String -> Parser String
--- |
--- >>> flip parse "aabbcc" $ string "aa"
--- [("aa","bbcc")]
--- >>> flip parse "aabbcc" $ string "bb"
--- []
--- >>> flip parse "aabbcc" $ string "aaa"
--- []
-string ""     = pure ""
-string (x:xs) = P . parse $ (:) <$> char x <*> string xs
-
-
 -- // Applicative
 
 many :: Parser a -> Parser [a]
@@ -160,9 +165,13 @@ many :: Parser a -> Parser [a]
 -- []
 -- >>> flip parse "abc" $ some digit
 -- []
+--
 many p = many1 p <|> pure []
 many1 :: Parser a -> Parser [a]
-many1 p = P . parse $ (:) <$> p <*> many p
+many1 p = P $ \inp ->
+  case flip parse inp p of
+    [(x,xs)] -> flip parse xs $ (x:) <$> many p
+    _        -> empty
 some :: Parser a -> Parser [a]
 some = many1
 -- |
@@ -171,13 +180,23 @@ ident :: Parser String
 -- |
 -- >>> flip parse "a01!" $ ident
 -- [("a01","!")]
-ident = P . parse $ (:) <$> lower <*> many alphanum
+--
+ident = P . parse $
+--P $ \inp ->
+--case flip parse inp $ lower of
+--  [(x,xs)] -> flip parse xs $ (x:) <$> many alphanum
+--  _        -> empty
+  (:) <$> lower <*> many alphanum
+-- |
 
 nat :: Parser Int
 -- |
 -- >>> flip parse "001a" $ nat
 -- [(1,"a")]
-nat = P . parse $ read <$> some digit
+--
+nat = P $ \inp ->
+  flip parse inp $ read <$> some digit
+-- |
 
 
 -- // space
@@ -186,12 +205,18 @@ space :: Parser ()
 -- |
 -- >>> flip parse "   aaa" $ space
 -- [((),"aaa")]
-space = P . parse $ pure () <$> many (sat isSpace)
+--
+space = P $ \inp ->
+  flip parse inp $ pure () <$> many (sat isSpace)
+-- |
 
 token :: Parser a -> Parser a
 -- |
 -- >>> flip parse " ( aaa ) " $ token (char '(')
 -- [('(',"aaa ) ")]
-token p = P . parse $ space *> p <* space
+--
+token p = P $ \inp ->
+  flip parse inp $ space *> p <* space
+-- |
 
 
