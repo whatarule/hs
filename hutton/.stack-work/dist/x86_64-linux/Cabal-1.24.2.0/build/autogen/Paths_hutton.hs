@@ -30,7 +30,7 @@ version = Version [0,1,0,0] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
 bindir     = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/bin"
-libdir     = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/lib/x86_64-linux-ghc-8.0.2/hutton-0.1.0.0-2qmmJagINybKdk6YwaJAxt"
+libdir     = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/lib/x86_64-linux-ghc-8.0.2/hutton-0.1.0.0-LpCggLl0SBD390HNpHAPWs"
 dynlibdir  = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/lib/x86_64-linux-ghc-8.0.2"
 datadir    = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/share/x86_64-linux-ghc-8.0.2/hutton-0.1.0.0"
 libexecdir = "/home/wk/hs/hutton/.stack-work/install/x86_64-linux/lts-8.15/8.0.2/libexec"

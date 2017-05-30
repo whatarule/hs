@@ -1,11 +1,11 @@
 
 ==================== FINAL INTERFACE ====================
-2017-05-25 23:40:03.277683 UTC
+2017-05-29 08:51:52.633117 UTC
 
 interface main@main:Main 8002
-  interface hash: d1bc195dd33cea442a3bb7dcad122ebd
-  ABI hash: 722368eba7999404e19bf465f4ac2118
-  export-list hash: c9f4bb860dc4c42e00c4f2a0d63f9889
+  interface hash: 0c1fab5d8d934d1e9b40a9c158e1140b
+  ABI hash: d5099771396f363cd01cd95ad8692e17
+  export-list hash: cb815f41d835690be0aa47d268b47355
   orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
   flag hash: 08bab451df37835d7dc385dcfaab61ed
   sig of: Nothing
@@ -15,7 +15,7 @@ exports:
   Main.main
 module dependencies:
 package dependencies: base-4.9.1.0* ghc-prim-0.5.0.0
-                      hutton-0.1.0.0@hutton-0.1.0.0-2qmmJagINybKdk6YwaJAxt
+                      hutton-0.1.0.0@hutton-0.1.0.0-LpCggLl0SBD390HNpHAPWs
                       integer-gmp-1.0.0.1
 orphans: base-4.9.1.0:GHC.Base base-4.9.1.0:GHC.Float
 family instance modules: base-4.9.1.0:Control.Applicative
@@ -25,7 +25,7 @@ family instance modules: base-4.9.1.0:Control.Applicative
                          base-4.9.1.0:GHC.TypeLits
 import  -/  base-4.9.1.0:Prelude 22dd289b8469a8fa8dc81cab7b237771
 import  -/  ghc-prim-0.5.0.0:GHC.Types 89f8de4f08018c9177c98d979eae0e45
-import  -/  hutton-0.1.0.0@hutton-0.1.0.0-2qmmJagINybKdk6YwaJAxt:Lib aaec73f7ef69427a1ee38686e96bdb36
+import  -/  hutton-0.1.0.0@hutton-0.1.0.0-LpCggLl0SBD390HNpHAPWs:Lib 01d5b6b240dae60e9a2f56f91efb1c97
 d6831ef04cb9301b090dfae6f7bb7ec7
   $trModule :: GHC.Types.Module
   {- HasNoCafRefs, Strictness: m,
@@ -38,12 +38,12 @@ d6831ef04cb9301b090dfae6f7bb7ec7
   $trModule2 :: GHC.Types.TrName
   {- HasNoCafRefs, Strictness: m1,
      Unfolding: (GHC.Types.TrNameS "main"#) -}
-c545a7be35fa8aca90d958eb6bfd7b3c
+98caeddcd1dc32506dabb41bf38b5c46
   main :: GHC.Types.IO ()
   {- Arity: 1, Strictness: <S,U>,
      Unfolding: InlineRule (0, True, True)
                 Lib.someFunc1 `cast` (Sym (GHC.Types.N:IO[0] <()>_R)) -}
-0ad4bb4883bef012057f04122cc33729
+adeb612dda7f453b9e8c9dd08091efbf
   main1 ::
     GHC.Prim.State# GHC.Prim.RealWorld
     -> (# GHC.Prim.State# GHC.Prim.RealWorld, () #)

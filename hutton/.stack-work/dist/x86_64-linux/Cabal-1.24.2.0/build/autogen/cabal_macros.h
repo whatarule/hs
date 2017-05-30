@@ -14,12 +14,12 @@
   (major1) == 4 && (major2) <  9 || \
   (major1) == 4 && (major2) == 9 && (minor) <= 1)
 
-/* package doctest-0.11.2 */
-#define VERSION_doctest "0.11.2"
-#define MIN_VERSION_doctest(major1,major2,minor) (\
-  (major1) <  0 || \
-  (major1) == 0 && (major2) <  11 || \
-  (major1) == 0 && (major2) == 11 && (minor) <= 2)
+/* package parsec-3.1.11 */
+#define VERSION_parsec "3.1.11"
+#define MIN_VERSION_parsec(major1,major2,minor) (\
+  (major1) <  3 || \
+  (major1) == 3 && (major2) <  1 || \
+  (major1) == 3 && (major2) == 1 && (minor) <= 11)
 
 /* tool gcc-5.4.0 */
 #define TOOL_VERSION_gcc "5.4.0"
@@ -77,7 +77,7 @@
   (major1) == 2 && (major2) <  26 || \
   (major1) == 2 && (major2) == 26 && (minor) <= 0)
 
-#define CURRENT_COMPONENT_ID "hutton-0.1.0.0-2qmmJagINybKdk6YwaJAxt"
+#define CURRENT_COMPONENT_ID "hutton-0.1.0.0-LpCggLl0SBD390HNpHAPWs"
 
-#define CURRENT_PACKAGE_KEY "hutton-0.1.0.0-2qmmJagINybKdk6YwaJAxt"
+#define CURRENT_PACKAGE_KEY "hutton-0.1.0.0-LpCggLl0SBD390HNpHAPWs"
 

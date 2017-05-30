@@ -64,7 +64,7 @@ instance Functor Parser where
       []        -> []
       [(v,out)] -> [(g v,out)]
 -- |
--- >>> flip parse "" . fmap (+1) . return $ 0
+-- >>> parse (fmap (+1) . return $ 0) ""
 -- [(1,"")]
 --
 
@@ -76,9 +76,9 @@ instance Applicative Parser where
       []        -> []
       [(g,out)] -> parse (fmap g px) out
 -- |
--- >>> flip parse "" . pure $ 1
+-- >>> parse (pure 1) ""
 -- [(1,"")]
--- >>> flip parse "" $ pure (+1) <*> pure 1
+-- >>> parse (pure (+1) <*> pure 1) ""
 -- [(2,"")]
 --
 
@@ -88,7 +88,7 @@ instance Monad Parser where
       []        -> []
       [(v,out)] -> parse (f v) out
 -- |
--- >>> flip parse "" $ pure 0 >>= (\_ -> pure 1)
+-- >>> parse (pure 0 >>= (\_ -> pure 1)) ""
 -- [(1,"")]
 --
 
@@ -100,9 +100,9 @@ instance Alternative Parser where
       []        -> parse q inp
       [(v,out)] -> [(v,out)]
 -- |
--- >>> flip parse "" $ empty
+-- >>> parse empty ""
 -- []
--- >>> flip parse "" $ pure 1 <|> empty
+-- >>> parse (pure 1 <|> empty) ""
 -- [(1,"")]
 --
 
@@ -110,11 +110,11 @@ instance Alternative Parser where
 -- // Char
 
 sat :: (Char -> Bool) -> Parser Char
-sat p = P . parse $ bool p item
+sat p = bool p item
 
 char :: Char -> Parser Char
 -- |
--- >>> flip parse "abc" $ char 'a'
+-- >>> parse (char 'a') "abc"
 -- [('a',"bc")]
 char x = sat (== x)
 
@@ -138,60 +138,141 @@ alphanum = sat isAlphaNum
 
 string :: String -> Parser String
 -- |
--- >>> flip parse "aabbcc" $ string "aa"
+-- >>> parse (string "aa") "aabbcc"
 -- [("aa","bbcc")]
--- >>> flip parse "aabbcc" $ string "bb"
+-- >>> parse (string "bb") "aabbcc"
 -- []
--- >>> flip parse "aabbcc" $ string "aaa"
+-- >>> parse (string "aaa") "aabbcc"
 -- []
 string ""     = pure ""
-string (x:xs) = P . parse $ (:) <$> char x <*> string xs
+string (x:xs) = (:) <$> char x <*> string xs
 
 
 -- // Applicative
 
 many :: Parser a -> Parser [a]
 -- |
--- >>> flip parse "123abc" $ many digit
+-- >>> parse (many digit) "123abc"
 -- [("123","abc")]
--- >>> flip parse "abc" $ many digit
+-- >>> parse (many digit) "abc"
 -- [("","abc")]
--- >>> flip parse "abc" $ many1 digit
+-- >>> parse (many1 digit) "abc"
 -- []
--- >>> flip parse "abc" $ some digit
+-- >>> parse (some digit) "abc"
 -- []
 many p = many1 p <|> pure []
 many1 :: Parser a -> Parser [a]
-many1 p = P . parse $ (:) <$> p <*> many p
+many1 p = (:) <$> p <*> many p
 some :: Parser a -> Parser [a]
 some = many1
 -- |
 
 ident :: Parser String
 -- |
--- >>> flip parse "a01!" $ ident
+-- >>> parse ident "a01!"
 -- [("a01","!")]
-ident = P . parse $ (:) <$> lower <*> many alphanum
+ident = (:) <$> lower <*> many alphanum
 
 nat :: Parser Int
 -- |
--- >>> flip parse "001a" $ nat
+-- >>> parse nat "001a"
 -- [(1,"a")]
-nat = P . parse $ read <$> some digit
+nat = read <$> some digit
+
+int :: Parser Int
+-- |
+-- >>> parse int "-1a"
+-- [(-1,"a")]
+-- >>> parse int "1a"
+-- [(1,"a")]
+int = (*(-1)) <$> (char '-' *> nat) <|> nat
 
 
 -- // space
 
 space :: Parser ()
 -- |
--- >>> flip parse "   aaa" $ space
--- [((),"aaa")]
-space = P . parse $ pure () <$> many (sat isSpace)
+-- >>> parse space "   aaa "
+-- [((),"aaa ")]
+space = pure () <$> many (sat isSpace)
 
 token :: Parser a -> Parser a
 -- |
--- >>> flip parse " ( aaa ) " $ token (char '(')
--- [('(',"aaa ) ")]
-token p = P . parse $ space *> p <* space
+-- >>> parse (token $ char '(') $ "  ( aaa) "
+-- [('(',"aaa) ")]
+token p = space *> p <* space
 
+identifier :: Parser String
+-- |
+-- >>> parse identifier "  a01 ! "
+-- [("a01","! ")]
+identifier = token ident
+
+natural :: Parser Int
+-- |
+-- >>> parse natural "  001 a "
+-- [(1,"a ")]
+natural = token nat
+
+integer :: Parser Int
+-- |
+-- >>> parse integer "  -1 a "
+-- [(-1,"a ")]
+-- >>> parse integer "  1 a "
+-- [(1,"a ")]
+integer = token int
+
+symbol :: String -> Parser String
+-- |
+-- >>> parse (symbol "aa") "  aa bbcc"
+-- [("aa","bbcc")]
+-- >>> parse (symbol "bb") "aa  bb cc"
+-- []
+-- >>> parse (symbol "aaa") "  aa bbcc"
+-- []
+symbol xs = token (string xs)
+
+
+p :: Parser [Int]
+-- |
+-- >>> parse p "  [ 1, 2, 3 ] "
+-- [([1,2,3],"")]
+-- >>> parse p "  [ 1, 2,  ] "
+-- []
+p = (:) <$> (symbol "[" *> natural)
+        <*> many (symbol "," *> natural)
+        <* symbol "]"
+
+
+-- // bnf
+-- |
+-- >>> parse expr "2*3+4"
+-- [(10,"")]
+-- >>> parse expr "2*(3+4)"
+-- [(14,"")]
+-- >>> parse expr "2+3+4"
+-- [(9,"")]
+expr :: Parser Int
+expr = (+) <$> term <*> (symbol "+" *> expr) <|> term
+term :: Parser Int
+term = (*) <$> factor <*> (symbol "*" *> term) <|> factor
+factor :: Parser Int
+factor = (symbol "(" *> expr) <* symbol ")" <|> natural
+
+eval :: String -> Int
+-- |
+-- >>> eval "2*3+4"
+-- 10
+-- >>> eval "2*(3+4)"
+-- 14
+-- >>> eval "2 * (3 + 4)"
+-- 14
+eval xs = case parse expr xs of
+  [(n,[])]  -> n
+  [(_,out)] -> error $ "unused input " ++ out
+  []        -> error $ "invalid input"
+-- >>> eval "-1"
+-- *** Exception: invalid input
+-- >>> eval "2 * (3 - 4)"
+-- *** Exception: unused input * (3 - 4)
 
