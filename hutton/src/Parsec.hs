@@ -5,30 +5,38 @@ module Parsec (
 --import Text.Parsec.Prim
 --import Text.Parsec.Combinator
 --import Text.Parsec.String (Parser)
-
-import Text.Parsec (Parsec, ParseError, parse, many, count, sepBy, (<|>))
-import Text.Parsec.Char (noneOf, anyChar, alphaNum, letter, digit)
+import Text.Parsec (Parsec, ParseError, parse, many, sepBy, (<|>), count)
+import Text.Parsec.Char (noneOf, alphaNum, anyChar, letter, digit)
 import Text.Parsec.Language (haskellDef)
 import qualified Text.Parsec.Token as T
 
+
+import Text.Parsec (Parsec, ParseError, parse, many, sepBy, (<|>))
+import Text.Parsec.Char (noneOf, alphaNum)
+import Text.Parsec.Language (haskellDef)
+import qualified Text.Parsec.Token as T
+-- |
 lexer = T.makeTokenParser haskellDef
 
 commaSep = T.commaSep lexer
 semiSep = T.semiSep lexer
-
 parens = T.parens lexer
-
 identifier = T.identifier lexer
+-- |
+
+-- |
+-- >>> sequenceA . fmap (parse ((parens . commaSep $ many alphaNum) <|> many identifier) "") =<< parse (semiSep . many $ noneOf ";") "" "select;(1,name)"
+-- Right [["select"],["1","name"]]
+-- >>> sequenceA . fmap (parse ((parens . commaSep $ many alphaNum) <|> many identifier) "") =<< parse (semiSep . many $ noneOf ";") "" "select;(id,field);(1,name)"
+-- Right [["select"],["id","field"],["1","name"]]
+--
+
+
+-- |
 natural = T.natural lexer
 stringLiteral = T.stringLiteral lexer
 symbol = T.symbol lexer
-
 -- |
--- >>> parse (symbol "(" *> sepBy (many alphaNum) (symbol ",") <* symbol ")") "" "(name,aaa,bbb)"
--- Right ["name","aaa","bbb"]
--- >>> parse (symbol "(" *> sepBy (many alphaNum) (symbol ",") <* symbol ")") "" "(1,name,aaa)"
--- Right ["1","name","aaa"]
---
 
 -- |
 -- >>> parse digit "" "1"
@@ -126,6 +134,7 @@ symbol = T.symbol lexer
 -- >>> sequenceA . fmap (parse ((parens . commaSep $ many alphaNum) <|> many identifier) "") =<< parse (semiSep . many $ noneOf ";") "" "select;(id,field);(1,name)"
 -- Right [["select"],["id","field"],["1","name"]]
 --
+
 
 parsecInputString :: Parsec String () [String]
 -- |
